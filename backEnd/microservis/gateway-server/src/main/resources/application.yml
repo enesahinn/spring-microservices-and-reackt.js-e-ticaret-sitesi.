@@ -1,0 +1,89 @@
+#https://cloud.spring.io/spring-cloud-gateway/reference/html/
+server:
+  port: ${SERVER_PORT:8088}
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: product-api
+          uri: lb://PRODUCT-API
+          predicates:
+            - Path=/saveproduct/add/**
+          filters:
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - name: Hystrix
+              args:
+                name: product-api
+                fallbackUri: forward:/fb/saveproduct/add/
+        - id: product-api
+          uri: lb://PRODUCT-API
+          predicates:
+            - Path=/add/**
+          filters:
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - name: Hystrix
+              args:
+                name: product-api
+                fallbackUri: forward:/fb/add/
+        - id: product-api
+          uri: lb://PRODUCT-API
+          predicates:
+            - Path=/products/**
+          filters:
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - name: Hystrix
+              args:
+                name: product-api
+                fallbackUri: forward:/fb/products
+        - id: product-api
+          uri: lb://PRODUCT-API
+          predicates:
+            - Path=/products/delete/**
+          filters:
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - name: Hystrix
+              args:
+                name: product-api
+                fallbackUri: forward:/fb/products/delete/**
+
+        - id: category-service
+          uri: lb://CATEGORY-SERVICE
+          predicates:
+            - Path=/categories/**
+          filters:
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - name: Hystrix
+              args:
+                name: category-service
+                fallbackUri: forward:/fb/categories
+
+        - id: topcategory-service
+          uri: lb://TOPCATEGORY-SERVICE
+          predicates:
+            - Path=/topcategories/**
+          filters:
+            - RewritePath=/(?<segment>.*), /$\{segment}
+            - name: Hystrix
+              args:
+                name: topcategory-service
+                fallbackUri: forward:/fb/topcategories
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVICE_URL:http://localhost:8500}/eureka/
+    register-with-eureka: false
+  instance:
+    preferIpAddress: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+
